@@ -1,5 +1,6 @@
 package Cracker;
 
+import kaptainwutax.biomeutils.source.OverworldBiomeSource;
 import kaptainwutax.featureutils.structure.*;
 import kaptainwutax.mcutils.rand.ChunkRand;
 import kaptainwutax.mcutils.rand.seed.StructureSeed;
@@ -8,9 +9,7 @@ import kaptainwutax.mcutils.util.pos.RPos;
 import kaptainwutax.mcutils.version.MCVersion;
 
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -329,17 +328,34 @@ public class Main {
         BURIED_TREASURE = new BuriedTreasure(VERSION);
         PILLAGER_OUTPOST = new PillagerOutpost(VERSION);
         SHIPWRECK = new Shipwreck(VERSION);
-        for(int z = 0; z < 10; z++) {
+        FileWriter fw = new FileWriter(new File("./src/main/java/file.txt"));
+        for(int z = 0; z < 3; z++) {
             dataList.add(getOldStructure());
         }
 
         List<Long> seeds = crack(dataList);
         List<Long> worldSeedsAfterInit = new ArrayList<>();
+        System.out.println("Been there");
         for(long seed : seeds){
             worldSeedsAfterInit.addAll(StructureSeed.toRandomWorldSeeds(seed));
         }
-        boolean validOption = false;
-        while(!false) {
+        System.out.println("Done that");
+        for(long seed : worldSeedsAfterInit){
+            OverworldBiomeSource bs = new OverworldBiomeSource(VERSION, seed);
+            boolean notFound = false;
+            for(OldStructure.Data<?> data : dataList){
+                if (!data.feature.canSpawn(data.chunkX, data.chunkZ, bs)){
+                    notFound = true;
+                    break;
+                }
+            }
+            if(!notFound){
+                System.out.println(seed);
+                fw.write(seed+"\n");
+            }
+        }
+        //boolean validOption = false;
+        /*while(!false) {
             System.out.println("Found " + worldSeedsAfterInit.size() + " world seeds. Write them to a file (F), provide another structure (S), provide a biome (B), or exit? (E)");
             String option = br.readLine();
             if (option.equals("F")){
@@ -560,7 +576,7 @@ public class Main {
                     default -> System.out.println("Invalid structure, please use the capital letter of an old structure.");
                 }
             }
-        }
+        }*/
     }
 
     private static RegionStructure.Data<?> getOldStructure() throws IOException {
