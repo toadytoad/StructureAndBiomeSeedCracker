@@ -328,8 +328,8 @@ public class Main {
         BURIED_TREASURE = new BuriedTreasure(VERSION);
         PILLAGER_OUTPOST = new PillagerOutpost(VERSION);
         SHIPWRECK = new Shipwreck(VERSION);
-        FileWriter fw = new FileWriter(new File("./src/main/java/file.txt"));
-        for(int z = 0; z < 3; z++) {
+        FileWriter fw = new FileWriter("./src/main/java/file.txt");
+        for(int z = 0; z < 4; z++) {
             dataList.add(getOldStructure());
         }
 
@@ -730,6 +730,14 @@ public class Main {
     }
 
     public static List<Long> crack(List<OldStructure.Data<?>> dataList) {
+        Stream<Long> lowerEighteen = LongStream.range(0, 1L << 18).boxed().filter(lower -> {
+            ChunkRand cr = new ChunkRand();
+            for (OldStructure.Data<?> data : dataList){
+                cr.setRegionSeed(lower, data.regionX, data.regionZ, data.feature.getSalt(), VERSION);
+                if(cr.nextInt(24)%2 != data.offsetX %2 || cr.nextInt(24)%2 != data.offsetZ % 2) return false;
+            }
+            return true;
+        });
         Stream<Long> lowerBitsStream = LongStream.range(0, 1L << 19).boxed().filter(lowerBits -> {
             ChunkRand rand= new ChunkRand();
             for (OldStructure.Data<?> data : dataList) {
@@ -741,12 +749,7 @@ public class Main {
             return true;
         });
         System.out.println("Did this");
-        Stream<Long> seedStream = lowerBitsStream
-                .flatMap(lowerBits ->
-                        LongStream.range(0, 1L << (48 - 19))
-                                .boxed()
-                                .map(upperBits -> (upperBits << 19) | lowerBits)
-                );
+        Stream<Long> seedStream = lowerBitsStream.flatMap(lowerBits -> LongStream.range(0, 1L << (48 - 19)).boxed().map(upperBits -> (upperBits << 19) | lowerBits));
         System.out.println("Did that");
         Stream<Long> structureSeedStream = seedStream.filter(seed -> {
             ChunkRand rand= new ChunkRand();
